@@ -1,0 +1,17 @@
+dependencies:
+  idf:
+    source:
+      type: idf
+    version: 5.4.1
+  lvgl:
+    dependencies: []
+    source:
+      path: D:\esp32_workspace\Espressif\v5.4.1\frameworks\esp-idf-v5.4.1\components\lvgl
+      type: local
+    version: 9.2.2
+direct_dependencies:
+- idf
+- lvgl/lvgl
+manifest_hash: ec45d56aa30130e1accf6de0ec42c585bb22c616dba9419ccd3e13921770afa7
+target: esp32s3
+version: 2.0.0
