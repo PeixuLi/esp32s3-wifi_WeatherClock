@@ -2,13 +2,14 @@
 #include <sys/param.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
 #include "esp_log.h"
-#include "esp_event.h"
-#include "esp_sntp.h"
 #include "esp_http_client.h"
-#include "wifi_http_client.h"
 #include "cJSON.h"
 #include "app_http_data.h"
+#include "http_get_weather.h"
 
 //url: <协议>://<主机名>:<端口>/<路径>?<查询字符串>
 //https://api.seniverse.com/v3/weather/now.json?key=SsRFsgFEzReo_TlLM&location=zhuhai&language=zh-Hans&unit=c
@@ -171,12 +172,12 @@ void Get_weather_task(void *pvParameters)
 {
     while(1)
     {
-        http_get_weather();
+        get_weather();
         vTaskDelay(60000/ portTICK_PERIOD_MS);
     }
 }
 
-void http_get_weather(void)
+void get_weather(void)
 {
     ESP_LOGI("http_get_weather", "http_get_weather");
     char url[256];

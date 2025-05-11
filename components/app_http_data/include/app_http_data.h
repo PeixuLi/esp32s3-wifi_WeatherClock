@@ -1,6 +1,8 @@
 #ifndef __APP_HTTP_DATA_H_
 #define __APP_HTTP_DATA_H_
 
+#include "http_get_weather.h"
+
 typedef struct 
 {
     char location[32];

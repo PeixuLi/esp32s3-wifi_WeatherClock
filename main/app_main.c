@@ -10,8 +10,8 @@
 #include "esp_event.h"
 #include "lcd_ST7789.h"
 #include "wifi_mode_sta.h"
-#include "wifi_http_client.h"
 #include "app_ui_set.h"
+#include "app_http_data.h"
 
 static const char *TAG = "app_main.c";
 

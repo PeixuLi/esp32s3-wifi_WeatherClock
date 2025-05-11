@@ -9,7 +9,8 @@
 #include "esp_mac.h"
 #include "lwip/inet.h"
 #include "wifi_mode_sta.h"
-#include "wifi_http_client.h"
+#include "wifi_sntp_get.h"
+#include "app_http_data.h"
 
 static const char *TAG = "wifi_mode_sta.c";
 
@@ -58,9 +59,8 @@ static void wifi_event_callback (void* event_handler_arg, esp_event_base_t event
             通过传递指针，宏可以正确解析出 IP 地址的四个字节，并格式化为字符串
         */
         ESP_LOGI("wifi_event_callback","STA IP:"IPSTR"\n", IP2STR(&info->ip_info.ip));
-        //TCP_client();
-        //xSemaphoreGive(tcp_start_semp);
 
+        sntp_get_time();
         xTaskCreate(Get_weather_task, "Get_weather_task", 4096, NULL, 6, NULL);
     }
 }
