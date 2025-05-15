@@ -8,8 +8,8 @@
 #include "esp_log.h"
 #include "esp_http_client.h"
 #include "cJSON.h"
-#include "app_http_data.h"
 #include "http_get_weather.h"
+#include "ui_home.h"
 
 //url: <协议>://<主机名>:<端口>/<路径>?<查询字符串>
 //https://api.seniverse.com/v3/weather/now.json?key=SsRFsgFEzReo_TlLM&location=zhuhai&language=zh-Hans&unit=c
@@ -170,9 +170,18 @@ static void parsed_json(const char *buffer)
 
 void Get_weather_task(void *pvParameters)
 {
+    Now_Weather_t last_weather = {0};
+    
     while(1)
     {
         get_weather();
+        if (strcmp(last_weather.location, now_weather.location) != 0 ||
+            last_weather.temperature != now_weather.temperature ||
+            strcmp(last_weather.weather_situation, now_weather.weather_situation) != 0)
+        {
+            lv_reflash_weather();
+            last_weather = now_weather;
+        }
         vTaskDelay(60000/ portTICK_PERIOD_MS);
     }
 }
@@ -182,7 +191,7 @@ void get_weather(void)
     ESP_LOGI("http_get_weather", "http_get_weather");
     char url[256];
     snprintf(url, sizeof(url), 
-        "http://api.seniverse.com/v3/weather/now.json?key=%s&location=%s&language=zh-Hans&unit=c",
+        "http://api.seniverse.com/v3/weather/now.json?key=%s&location=%s&language=en&unit=c",
         API_KEY, LOCATION);
 
     esp_http_client_config_t cfg = {

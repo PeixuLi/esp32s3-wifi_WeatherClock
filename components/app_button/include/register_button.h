@@ -3,7 +3,6 @@
 
 extern button_handle_t btn1_handle, btn2_handle, btn3_handle;
 
-
 void Register_Button(uint32_t button_num, button_handle_t* btn, button_cb_t button_event_cb);
 void Register_Button_Event(button_handle_t* btn, button_event_t event, button_cb_t button_event_cb);
 void Button_Init(void);

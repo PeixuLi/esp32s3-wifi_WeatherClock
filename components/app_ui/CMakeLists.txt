@@ -1,4 +1,4 @@
-idf_component_register(SRCS "app_ui.c" "lvgl_set.c" "app_ui_set.c"
+idf_component_register(SRCS "ui_home.c" "ui_button.c" "app_ui.c"
                     INCLUDE_DIRS "include"
                     REQUIRES driver 
                              bsp_button 
@@ -6,4 +6,6 @@ idf_component_register(SRCS "app_ui.c" "lvgl_set.c" "app_ui_set.c"
                              lvgl 
                              esp_lcd 
                              esp_lvgl_port 
-                             lcd_ST7789)
+                             lcd_ST7789
+                             wifi_sta
+                             app_http_data)

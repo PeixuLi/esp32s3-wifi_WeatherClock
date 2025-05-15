@@ -4,7 +4,10 @@
 extern "C" {
 #endif
 
-void sntp_get_time(void);
+extern struct tm localTime;
+
+int sntp_get_time(void);
+void Get_local_time(struct tm *localTime);
 
 #ifdef __cplusplus
 }

@@ -13,9 +13,54 @@
 
 static const char *TAG = "LCD_ST7789";
 
-esp_lcd_panel_handle_t lcd_panel_handle;
+esp_lcd_panel_io_handle_t   lcd_io_handle;
+esp_lcd_panel_handle_t      lcd_panel_handle;
 
-//static void lcd_test(void);
+uint16_t LCD_width = 240;
+uint16_t LCD_height = 320;
+
+void lcd_set_direction(lcd_rotation_t rotation, esp_lcd_panel_io_handle_t io)
+{
+    uint8_t madctl_value = 0x00;
+
+    switch(rotation)
+    {
+    case LCD_ROTATION_0:
+        LCD_width = ST7789_WIDTH;
+        LCD_height = ST7789_HEIGHT;
+        madctl_value = 0x00;// 纵屏
+        lv_update_direction(0);
+
+        break;
+    
+    case LCD_ROTATION_90:
+        LCD_width = ST7789_HEIGHT;
+        LCD_height = ST7789_WIDTH;
+        madctl_value = 0x60; // 横屏
+        lv_update_direction(1);
+
+        break;
+    
+    case LCD_ROTATION_180:
+        LCD_width = ST7789_WIDTH;
+        LCD_height = ST7789_HEIGHT;
+        madctl_value = 0xC0; // 倒置纵屏
+        lv_update_direction(2);
+
+        break;
+
+    case LCD_ROTATION_270:
+        LCD_width = ST7789_HEIGHT;
+        LCD_height = ST7789_WIDTH;
+        madctl_value = 0xA0; // 反向横屏
+        lv_update_direction(3);
+
+        break;
+    }
+
+    ESP_ERROR_CHECK(esp_lcd_panel_io_tx_param(lcd_io_handle, 0x36, &madctl_value, 1));
+    //vTaskDelay(pdMS_TO_TICKS(120));
+}
 
 static void lcd_vendor_specific_init(esp_lcd_panel_io_handle_t io)
 {
@@ -68,7 +113,7 @@ void LCD_Init(void)
         .sclk_io_num = LCD_CLK,
         .quadwp_io_num = -1,                  // 必须设置且为 `-1`
         .quadhd_io_num = -1,                  // 必须设置且为 `-1`
-        .max_transfer_sz = LCD_WEIGH * LCD_HIGH * 2,// 表示 SPI 单次传输允许的最大字节数上限，通常设为全屏大小即可
+        .max_transfer_sz = LCD_width * LCD_height * 2,// 表示 SPI 单次传输允许的最大字节数上限，通常设为全屏大小即可
     };
     ESP_ERROR_CHECK(spi_bus_initialize(LCD_HOST, &bus_config, SPI_DMA_CH_AUTO));
                     // 第 1 个参数表示使用的 SPI 主机 ID，和后续创建接口设备时保持一致
@@ -84,7 +129,6 @@ void LCD_Init(void)
 
     /* LCD属性配置 */
     //Create LCD panel IO handle, for SPI interface
-    esp_lcd_panel_io_handle_t lcd_io_handle;
     esp_lcd_panel_io_spi_config_t lcd_io_config = {
         .cs_gpio_num = LCD_CS,
         .dc_gpio_num = LCD_DC,
@@ -114,33 +158,9 @@ void LCD_Init(void)
 
     //初始化lvgl
     lcd_lvgl_Init(&lcd_io_handle);
+    vTaskDelay(pdMS_TO_TICKS(120));
+    lcd_set_direction(LCD_ROTATION_90, lcd_io_handle);
 
     // 背光控制
     gpio_set_level(LCD_BK, 1); // 点亮背光
-    //lcd_test();
 }
-
-// static void lcd_test(void)
-// {
-//     ESP_LOGI(TAG, "绘制测试图像");
-//     uint16_t *color_data = heap_caps_malloc(LCD_WEIGH * LCD_HIGH * 2, MALLOC_CAP_8BIT);
-//     if (color_data == NULL) {
-//         ESP_LOGE(TAG, "内存分配失败");
-//         return;
-//     }
-//    // 绘制三色条
-//     for (int i = 0; i < LCD_WEIGH * LCD_HIGH; i++) {
-//         int row = i / LCD_WEIGH;
-//         if (row < LCD_HIGH / 3) {
-//             color_data[i] = __builtin_bswap16(0xF800); // 期望红色
-//         } else if (row < 2 * LCD_HIGH / 3) {
-//             color_data[i] = __builtin_bswap16(0x07E0); // 期望绿色
-//         } else {
-//             color_data[i] = __builtin_bswap16(0x001F); // 期望蓝色
-//         }
-//         //ESP32的esp_lcd_panel_draw_bitmap可能以小端序发送16位数据，而ST7789期望大端序（高字节先传）。
-//         //在ESP32代码中，发送颜色数据前手动交换字节序__builtin_bswap16
-//     }
-//     esp_lcd_panel_draw_bitmap(lcd_panel_handle, 0, 0, LCD_WEIGH, LCD_HIGH, color_data);
-//     free(color_data);
-// }

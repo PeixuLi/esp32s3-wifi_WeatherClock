@@ -10,8 +10,7 @@
 #include "esp_event.h"
 #include "lcd_ST7789.h"
 #include "wifi_mode_sta.h"
-#include "app_ui_set.h"
-#include "app_http_data.h"
+#include "app_ui.h"
 
 static const char *TAG = "app_main.c";
 
@@ -26,8 +25,8 @@ void app_main(void)
     create_ui();
     wifi_creat_sta();
 
-    while (1)
+    while (1) 
     {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
