@@ -6,7 +6,7 @@ extern "C" {
 
 extern struct tm localTime;
 
-int sntp_get_time(void);
+void sntp_get_time_task(void* parameter);
 void Get_local_time(struct tm *localTime);
 
 #ifdef __cplusplus

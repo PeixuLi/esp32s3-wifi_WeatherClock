@@ -3,7 +3,7 @@
 
 void lv_set_background(void);
 void create_homePage(void);
-void lv_reflash_data(void* parameter);
+void lv_start_progress(void* parameter);
 void lv_reflash_weather(void);
 
 #endif

@@ -21,7 +21,8 @@
     "lvgl.h": "c",
     "stdio.h": "c",
     "ui_home.h": "c",
-    "lvgl_set.h": "c"
+    "lvgl_set.h": "c",
+    "task.h": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM8"

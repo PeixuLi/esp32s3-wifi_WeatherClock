@@ -41,16 +41,16 @@ void lv_reflash_weather(void)
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-void lv_reflash_data(void* parameter)
+void lv_start_progress(void* parameter)
 {
+    lvgl_port_lock(0);
     // 创建显示时间定时器
-    while (1)
-    {
-        lv_timer_handle = lv_timer_create(lv_updateTime_cb, 1000, time_label);
-        // 发送更新日期信息
-        lv_obj_send_event(time_label, LV_OBJ_FLAG_CLICKABLE, NULL);
-        break;
-    }
+    lv_timer_handle = lv_timer_create(lv_updateTime_cb, 1000, time_label);
+    // 发送更新日期信息
+    lv_obj_send_event(time_label, LV_OBJ_FLAG_CLICKABLE, NULL);
+    
+    lvgl_port_unlock();
+
     vTaskDelete(NULL);
 }
 
@@ -138,7 +138,7 @@ static void lv_create_dispDate(void)
     // 创建一个标签
     date_label = lv_label_create(scr);
     lv_label_set_text(date_label, "--/--/--     --");
-
+    
     // lv_obj_set_width(date_label, width);
     lv_obj_align(date_label, LV_ALIGN_BOTTOM_LEFT, 0, 0);
 

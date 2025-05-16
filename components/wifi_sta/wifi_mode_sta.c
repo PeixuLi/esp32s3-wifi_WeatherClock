@@ -11,7 +11,6 @@
 #include "wifi_mode_sta.h"
 #include "wifi_sntp_get.h"
 #include "ui_home.h"
-#include "http_get_weather.h"
 
 static const char *TAG = "wifi_mode_sta.c";
 
@@ -23,8 +22,10 @@ static const char *TAG = "wifi_mode_sta.c";
 #define STA_StaticGateway "192.168.137.1"
 
 uint8_t connect_count = 0;
-extern void Get_weather_task(void *pvParameters);
 
+extern TaskHandle_t lv_start_progress_handle;
+extern TaskHandle_t Get_weather_handle;
+extern TaskHandle_t sntp_get_time_handle;
 
 static void wifi_event_callback(void *event_handler_arg, esp_event_base_t event_base,
                                 int32_t event_id, void *event_data)
@@ -50,6 +51,13 @@ static void wifi_event_callback(void *event_handler_arg, esp_event_base_t event_
         else
         {
             ESP_LOGW("wifi_event_callback", "wifi connected failed!");
+
+            // 安全删除任务
+            if (Get_weather_handle != NULL) {
+                vTaskDelete(Get_weather_handle);
+                Get_weather_handle = NULL;
+                ESP_LOGI(TAG, "Get_weather_task任务已删除");
+            }
         }
     }
     if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
@@ -62,12 +70,12 @@ static void wifi_event_callback(void *event_handler_arg, esp_event_base_t event_
         */
         ESP_LOGI("wifi_event_callback", "STA IP:" IPSTR "\n", IP2STR(&info->ip_info.ip));
 
-        int err = sntp_get_time();
-        if(err == 0)
+        // 仅在任务不存在时创建SNTP任务
+        if (sntp_get_time_handle == NULL) 
         {
-            xTaskCreatePinnedToCore(lv_reflash_data, "lv_reflash_data", 4096, NULL, 6, NULL, 1);
-            xTaskCreate(Get_weather_task, "Get_weather_task", 4096, NULL, 4, NULL);
-        }  
+            xTaskCreate(sntp_get_time_task, "sntp_get_time", 4096, NULL, 5, &sntp_get_time_handle);
+            ESP_LOGI(TAG, "sntp_get_time任务已创建");
+        }
     }
 }
 
@@ -81,7 +89,8 @@ void wifi_creat_sta(void)
     /* ************ 配置成静态IP *********** */
     // 以默认方式创建一个sta类型的网卡
     esp_netif_t *sta_netif_handle = esp_netif_create_default_wifi_sta();
-#if 1
+
+#if WIFI_STA_STATIC_IP
     ESP_ERROR_CHECK(esp_netif_dhcpc_stop(sta_netif_handle)); // 停止该网卡的DHCP客户端
 
     esp_netif_ip_info_t STA_Info = {
