@@ -7,10 +7,12 @@
 #include "esp_event.h"
 #include "esp_wifi.h"
 #include "esp_mac.h"
+#include "esp_netif_sntp.h"
 #include "lwip/inet.h"
 #include "wifi_mode_sta.h"
 #include "wifi_sntp_get.h"
 #include "ui_home.h"
+#include "app_message.h"
 
 static const char *TAG = "wifi_mode_sta.c";
 
@@ -26,6 +28,7 @@ uint8_t connect_count = 0;
 extern TaskHandle_t lv_start_progress_handle;
 extern TaskHandle_t Get_weather_handle;
 extern TaskHandle_t sntp_get_time_handle;
+extern bool sntp_initialized;
 
 static void wifi_event_callback(void *event_handler_arg, esp_event_base_t event_base,
                                 int32_t event_id, void *event_data)
@@ -34,10 +37,12 @@ static void wifi_event_callback(void *event_handler_arg, esp_event_base_t event_
     {
         esp_wifi_connect();
         ESP_LOGI("wifi_event_callback", "wifi connecting...");
+        //lv_show_hint("wifi connecting...", 1000);
     }
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED)
     {
         ESP_LOGI("wifi_event_callback", "wifi connected!");
+        //lv_show_hint("wifi connected!", 1000);
     }
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
@@ -47,34 +52,56 @@ static void wifi_event_callback(void *event_handler_arg, esp_event_base_t event_
             vTaskDelay(1000 / portTICK_PERIOD_MS);
             ESP_ERROR_CHECK(esp_wifi_connect());
             ESP_LOGI("wifi_event_callback", "wifi connecting...");
+            //lv_show_hint("wifi connecting...", 1000);
         }
         else
         {
             ESP_LOGW("wifi_event_callback", "wifi connected failed!");
+            //lv_show_hint("wifi connected failed!", 2000);
+        }
+        // 清理SNTP资源
+        if (sntp_initialized)
+        {
+            esp_netif_sntp_deinit();
+            sntp_initialized = false;
+            ESP_LOGI(TAG, "SNTP资源已清理");
+        }
 
-            // 安全删除任务
-            if (Get_weather_handle != NULL) {
-                vTaskDelete(Get_weather_handle);
-                Get_weather_handle = NULL;
-                ESP_LOGI(TAG, "Get_weather_task任务已删除");
-            }
+        // 删除SNTP任务
+        if (sntp_get_time_handle != NULL)
+        {
+            vTaskDelete(sntp_get_time_handle);
+            sntp_get_time_handle = NULL;
+            ESP_LOGI(TAG, "SNTP任务已删除");
+        }
+
+        // 删除天气任务
+        if (Get_weather_handle != NULL)
+        {
+            vTaskDelete(Get_weather_handle);
+            Get_weather_handle = NULL;
+            ESP_LOGI(TAG, "Get_weather_task任务已删除");
         }
     }
     if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
         ip_event_got_ip_t *info = (ip_event_got_ip_t *)event_data;
         connect_count = 0;
-        /*
-            取地址（&）是因为 IP2STR 宏需要一个指向 ip4_addr 结构体的指针，而非结构体本身。
-            通过传递指针，宏可以正确解析出 IP 地址的四个字节，并格式化为字符串
-        */
         ESP_LOGI("wifi_event_callback", "STA IP:" IPSTR "\n", IP2STR(&info->ip_info.ip));
 
-        // 仅在任务不存在时创建SNTP任务
-        if (sntp_get_time_handle == NULL) 
+        //仅在任务不存在且SNTP未初始化时创建
+        if (sntp_get_time_handle == NULL && !sntp_initialized)
         {
-            xTaskCreate(sntp_get_time_task, "sntp_get_time", 4096, NULL, 5, &sntp_get_time_handle);
-            ESP_LOGI(TAG, "sntp_get_time任务已创建");
+            if (xTaskCreatePinnedToCore(sntp_get_time_task, "sntp_get_time", 4096, NULL, 4,
+                                        &sntp_get_time_handle, 0) != pdPASS)
+            {
+                ESP_LOGE(TAG, "创建sntp_get_time任务失败");
+            }
+            else
+            {
+                ESP_LOGI(TAG, "sntp_get_time任务已创建");
+                //lv_show_hint("sntp time task!", 1000);
+            }
         }
     }
 }

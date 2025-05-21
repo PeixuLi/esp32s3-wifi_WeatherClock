@@ -1,28 +1,8 @@
 {
   "C_Cpp.intelliSenseEngine": "default",
   "files.associations": {
-    "esp_event.h": "c",
-    "http_get_weather.h": "c",
-    "cjson.h": "c",
     "esp_log.h": "c",
-    "esp_sntp.h": "c",
-    "app_clock.h": "c",
-    "compare": "c",
-    "cstdint": "c",
-    "esp_lcd_panel_st7789.h": "c",
-    "esp_heap_caps.h": "c",
-    "register_button.h": "c",
-    "app_button.h": "c",
-    "app_ui.h": "c",
-    "wifi_sntp_get.h": "c",
-    "esp_netif_sntp.h": "c",
-    "esp_lvgl_port.h": "c",
-    "queue.h": "c",
-    "lvgl.h": "c",
-    "stdio.h": "c",
-    "ui_home.h": "c",
-    "lvgl_set.h": "c",
-    "task.h": "c"
+    "stdio.h": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM8"

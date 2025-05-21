@@ -6,12 +6,12 @@ dependencies:
   lvgl:
     dependencies: []
     source:
-      path: D:\esp32_workspace\Espressif\v5.4.1\frameworks\esp-idf-v5.4.1\components\lvgl
+      path: E:\Software workspaces\esp32\mission\weather_clock\code\esp32s3-wifi_WeatherClock\components\lvgl
       type: local
     version: 9.2.2
 direct_dependencies:
 - idf
 - lvgl/lvgl
-manifest_hash: ec45d56aa30130e1accf6de0ec42c585bb22c616dba9419ccd3e13921770afa7
+manifest_hash: 04b9e1aa3f1fb417af55b637a3c49f1f3abf3bd6f744d7324c352836d3641a53
 target: esp32s3
 version: 2.0.0

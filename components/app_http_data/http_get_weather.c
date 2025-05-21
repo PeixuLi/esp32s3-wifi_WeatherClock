@@ -191,7 +191,7 @@ void get_weather(void)
     ESP_LOGI("http_get_weather", "http_get_weather");
     char url[256];
     snprintf(url, sizeof(url), 
-        "http://api.seniverse.com/v3/weather/now.json?key=%s&location=%s&language=en&unit=c",
+        "http://api.seniverse.com/v3/weather/now.json?key=%s&location=%s&language=zh-Hans&unit=c",
         API_KEY, LOCATION);
 
     esp_http_client_config_t cfg = {

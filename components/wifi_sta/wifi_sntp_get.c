@@ -5,12 +5,14 @@
 #include "wifi_sntp_get.h"
 #include "http_get_weather.h"
 #include "ui_home.h"
+#include "app_message.h"
 
 static const char *TAG = "wifi_sntp_get.c";
 
-TaskHandle_t lv_start_progress_handle;
-TaskHandle_t Get_weather_handle;
-TaskHandle_t sntp_get_time_handle;
+bool sntp_initialized = false;
+TaskHandle_t lv_start_progress_handle = NULL;
+TaskHandle_t Get_weather_handle = NULL;
+TaskHandle_t sntp_get_time_handle = NULL;
 
 void sntp_sync_callback(struct timeval *tv)
 {
@@ -23,7 +25,7 @@ void sntp_sync_callback(struct timeval *tv)
     if (Get_weather_handle == NULL)
     {
         xTaskCreatePinnedToCore(Get_weather_task, "Get_weather_task", 4096, NULL, 4,
-                                &Get_weather_handle, 1); // 统一绑定到核心1
+                                &Get_weather_handle, 1); // 统一绑定到核心0
         ESP_LOGI(TAG, "Get_weather_task任务已创建");
     }
 }
@@ -43,7 +45,13 @@ void Get_local_time(struct tm *localTime)
 // SNTP 时间同步，SNTP 仅提供 UTC 时间，必须设置时区以获取本地时间
 void sntp_get_time_task(void *parameter)
 {
-    // 初始化sntp
+    if (sntp_initialized)
+    {
+        ESP_LOGW(TAG, "SNTP已初始化，跳过");
+        sntp_get_time_handle = NULL;
+        vTaskSuspend(NULL); // 挂起任务
+    }
+
     esp_sntp_config_t config = {
         .servers = {"pool.ntp.org", "ntp1.aliyun.com", "cn.pool.ntp.org"},
         .num_of_servers = 3,
@@ -57,23 +65,30 @@ void sntp_get_time_task(void *parameter)
         .index_of_first_server = 0,
     };
     esp_netif_sntp_init(&config);
+    sntp_initialized = true;
 
-    // 等待系统时间设置
     int retry = 0;
-    const int retry_count = 11;
+    int retry_count = 10;
 
-    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
+    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry <= retry_count)
     {
         ESP_LOGI(TAG, "等待系统时间... (%d/%d)", retry, retry_count);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        //lv_show_hint("wait sntp time...", 1000);
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
-    if (retry == retry_count)
+    if (retry > retry_count)
     {
         ESP_LOGE(TAG, "SNTP同步时间失败");
         esp_netif_sntp_deinit();
-        vTaskDelete(NULL);
+        sntp_initialized = false;
+        sntp_get_time_handle = NULL;
+        vTaskSuspend(NULL);
     }
-
-    esp_netif_sntp_deinit();
-    vTaskDelete(NULL);
+    else
+    {
+        ESP_LOGI(TAG, "SNTP同步成功");
+        sntp_get_time_handle = NULL;
+        vTaskSuspend(NULL);
+        //lv_show_hint("wait sntp time successed!", 1500);
+    }
 }

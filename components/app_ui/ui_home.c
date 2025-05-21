@@ -13,9 +13,9 @@
 #include "wifi_sntp_get.h"
 #include "http_get_weather.h"
 
+LV_FONT_DECLARE(myfont_alimama_20);
+
 lv_obj_t *scr;
-//home_page
-lv_obj_t *line1,*line2;
 lv_obj_t *date_label;
 lv_obj_t *time_label;
 lv_obj_t *weather_label;
@@ -40,7 +40,6 @@ void lv_reflash_weather(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-
 void lv_start_progress(void* parameter)
 {
     lvgl_port_lock(0);
@@ -88,13 +87,15 @@ static void lv_updateWeather_cb(lv_event_t * e)
     char str[100];
 
     snprintf(str, sizeof(str), 
-        "%s    temp:%d  %s",
+        "%s    当前温度:%d度  %s",
         now_weather.location, now_weather.temperature, now_weather.weather_situation);
 
     lv_label_set_text_fmt(label, "%s", str); // 支持printf格式[1,7](@ref)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+static lv_obj_t *line1,*line2;
+
 void lv_set_background(void)
 {
     // 获取当前活动屏幕
@@ -193,13 +194,13 @@ static void lv_create_disWeather(void)
 
     // 创建一个标签
     weather_label = lv_label_create(scr);
-    lv_label_set_text(weather_label, "--    temp:--  --");
+    lv_label_set_text(weather_label, "--    当前温度:--  --");
 
     lv_obj_set_width(weather_label, width);
     lv_obj_align(weather_label, LV_ALIGN_TOP_LEFT, 0, 0);
 
     // 设置字体
-    lv_obj_set_style_text_font(weather_label, &lv_font_montserrat_22, 0); // 使用 30 像素的 Montserrat 字体
+    lv_obj_set_style_text_font(weather_label, &myfont_alimama_20, 0); // 使用 30 像素的 Montserrat 字体
     lv_obj_set_style_text_color(weather_label, lv_color_hex(LV_BLACK), 0);
     lv_obj_set_style_text_align(weather_label, LV_TEXT_ALIGN_CENTER, 0); // 水平居中
 

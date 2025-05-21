@@ -145,7 +145,6 @@ void LCD_Init(void)
         .bits_per_pixel = 16,
         .rgb_ele_order = LCD_RGB_ELEMENT_ORDER_RGB,
         .reset_gpio_num = LCD_RST,
-        //.data_endian = LCD_RGB_DATA_ENDIAN_LITTLE,
         .data_endian = LCD_RGB_DATA_ENDIAN_BIG,
     };  
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(lcd_io_handle,&panel_dev_config,&lcd_panel_handle));
